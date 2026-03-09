@@ -1,16 +1,33 @@
 import * as THREE from 'three';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
 // SCENE SETUP
 const canvas = document.querySelector('#c');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 2;
+camera.position.set(0, 10, 20);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setAnimationLoop(animate);
-document.body.appendChild(renderer.domElement);
+
+// LIGHTING - Essential for OBJ/MTL models
+const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.6);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.8);
+directionalLight.position.set(0, 10, 0);
+directionalLight.target.position.set(-5, 0, 0);
+scene.add(directionalLight);
+scene.add(directionalLight.target);
+
+// CONTROLS
+const controls = new OrbitControls(camera, canvas);
+controls.target.set(0, 5, 0);
+controls.update();
 
 
 // TEXTURES SETUP
@@ -49,8 +66,41 @@ const materials = [
 
 
 // GEOMETRY SETUP
+// const mtlLoader = new MTLLoader();
+// mtlLoader.load('../models/windmill_001.mtl', (mtl) => {
+//     mtl.preload();
+//     const objLoader = new OBJLoader();
+//     objLoader.setMaterials(mtl);
+//     objLoader.load('../models/windmill_001.obj', (root) => {
+//         scene.add(root);
+//     });
+// });
 
+const objLoader = new OBJLoader();
+objLoader.load('https://threejs.org/manual/examples/resources/models/windmill_2/windmill.obj', (root) => {
+    scene.add(root);
+    const box = new THREE.Box3().setFromObject(root);
+    const boxSize = box.getSize(new THREE.Vector3()).length();
+    const boxCenter = box.getCenter(new THREE.Vector3());
+    frameArea(boxSize * 1.2, boxSize, boxCenter, camera);
+    controls.maxDistance = boxSize * 10;
+    controls.target.copy(boxCenter);
+    controls.update();
+});
 
+function frameArea(sizeToFitOnScreen, boxSize, boxCenter, camera) {
+    const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
+    const halfFovY = THREE.MathUtils.degToRad(camera.fov * .5);
+    const distance = halfSizeToFitOnScreen / Math.tan(halfFovY);
+    const direction = (new THREE.Vector3())
+        .subVectors(camera.position, boxCenter)
+        .multiply(new THREE.Vector3(1, 0, 1))
+        .normalize(); camera.position.copy(direction.multiplyScalar(distance).add(boxCenter));
+    camera.near = boxSize / 100;
+    camera.far = boxSize * 100;
+    camera.updateProjectionMatrix();
+    camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
+}
 
 function animate(time) {
     for (const cube of cubes) {
