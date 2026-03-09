@@ -147,6 +147,35 @@ function updateTexture() {
     texture.needsUpdate = true;
 }
 
+
+class MinMaxGUIHelper {
+    constructor(obj, minProp, maxProp, minDif) {
+        this.obj = obj;
+        this.minProp = minProp;
+        this.maxProp = maxProp;
+        this.minDif = minDif;
+    }
+    get min() {
+        return this.obj[this.minProp];
+    }
+    set min(v) {
+        this.obj[this.minProp] = v;
+        this.obj[this.maxProp] = Math.max(this.obj[this.maxProp], v + this.minDif);
+    }
+    get max() {
+        return this.obj[this.maxProp];
+    }
+    set max(v) {
+        this.obj[this.maxProp] = v;
+        this.min = this.min;  // this will call the min setter
+    }
+}
+
+function updateCamera() {
+    camera.updateProjectionMatrix();
+}
+
+
 const texture = loader.load('../textures/wall.jpg');
 const material = new THREE.MeshBasicMaterial({
     map: texture,
@@ -171,3 +200,8 @@ gui.add(texture.center, 'x', -.5, 1.5, .01).name('texture.center.x');
 gui.add(texture.center, 'y', -.5, 1.5, .01).name('texture.center.y');
 gui.add(new DegRadHelper(texture, 'rotation'), 'value', -360, 360)
     .name('texture.rotation');
+gui.add(camera, 'fov', 1, 180).onChange(updateCamera);
+const minMaxGUIHelper = new MinMaxGUIHelper(camera, 'near', 'far', 0.1);
+gui.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updateCamera);
+gui.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updateCamera);
+
