@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="utf-8">
-    <title>My first three.js app</title>
+    <title>Santa Cruz Airport</title>
+    <link rel="icon" type="image/png" href="../img/triangle-png-logo-20.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
@@ -305,9 +306,9 @@
     <canvas id="c" style="display: none;"></canvas>
     <div id="next-flights">
         <div class="flights-header">
-            <span>Most tracked flights</span>
+            <span>Next landing flights</span>
             <span class="live-badge">LIVE</span>
-            <span class="arrow-icon">^</span>
+            <span id="arrow-icon" class="arrow-icon">^</span>
         </div>
         <ul id="flights">
             <li class="flight-card">

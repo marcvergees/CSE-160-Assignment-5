@@ -89,7 +89,7 @@ function floor() {
     g_scene.add(mesh);
 }
 
-function control_tower() {
+function control_tower(x = 0, y = 0, z = 0) {
     // Materials
     const concreteMat = new THREE.MeshPhongMaterial({ color: '#888888' });
     const whiteMat = new THREE.MeshPhongMaterial({ color: '#FFFFFF' });
@@ -98,85 +98,90 @@ function control_tower() {
     const metalMat = new THREE.MeshPhongMaterial({ color: '#444444' }); // Antennas/Technical equipment
     const radomeMat = new THREE.MeshPhongMaterial({ color: '#EEEEEE' }); // Off-white for radome
 
+    const towerGroup = new THREE.Group();
+
     // 1. Foundation - Concrete
     const baseGeo = new THREE.BoxGeometry(12, 1, 12);
     const base = new THREE.Mesh(baseGeo, concreteMat);
     base.position.set(0, 0.5, 0);
-    g_scene.add(base);
+    towerGroup.add(base);
 
     // 2. Main Shaft - Level 1 (Lower) - White
     const shaft1Geo = new THREE.BoxGeometry(7, 12, 7);
     const shaft1 = new THREE.Mesh(shaft1Geo, whiteMat);
     shaft1.position.set(0, 7, 0);
-    g_scene.add(shaft1);
+    towerGroup.add(shaft1);
 
     // 3. Main Shaft - Level 2 (Middle Taper Transition) - Red Stripe
     const shaft2Geo = new THREE.BoxGeometry(8, 2, 8);
     const shaft2 = new THREE.Mesh(shaft2Geo, redMat);
     shaft2.position.set(0, 14, 0);
-    g_scene.add(shaft2);
+    towerGroup.add(shaft2);
 
     // 4. Main Shaft - Level 3 (Upper) - White
     const shaft3Geo = new THREE.BoxGeometry(7.5, 6, 7.5);
     const shaft3 = new THREE.Mesh(shaft3Geo, whiteMat);
     shaft3.position.set(0, 18, 0);
-    g_scene.add(shaft3);
+    towerGroup.add(shaft3);
 
     // 5. Technical Level (Under the Cab) - Red Detail
     const techGeo = new THREE.BoxGeometry(10, 2, 10);
     const tech = new THREE.Mesh(techGeo, redMat);
     tech.position.set(0, 22, 0);
-    g_scene.add(tech);
+    towerGroup.add(tech);
 
     // 6. Observation Cab - Blue Glass Body
     const cabGeo = new THREE.BoxGeometry(14, 8, 14);
     const cab = new THREE.Mesh(cabGeo, glassMat);
     cab.position.set(0, 27, 0);
-    g_scene.add(cab);
+    towerGroup.add(cab);
 
     // 7. Roof / Sun Shield - White
     const roofGeo = new THREE.BoxGeometry(16, 1, 16);
     const roof = new THREE.Mesh(roofGeo, whiteMat);
     roof.position.set(0, 31.5, 0);
-    g_scene.add(roof);
+    towerGroup.add(roof);
 
     // 8. Radome (Secondary Radar) - Radome White
     const radomeGeo = new THREE.SphereGeometry(2.5, 32, 16);
     const radome = new THREE.Mesh(radomeGeo, radomeMat);
     radome.position.set(4, 34, 4);
-    g_scene.add(radome);
+    towerGroup.add(radome);
 
     // 9. Main Radar Antenna - Metal/Gray
     const radarBaseGeo = new THREE.BoxGeometry(3, 1, 3);
     const radarBase = new THREE.Mesh(radarBaseGeo, metalMat);
     radarBase.position.set(-4, 32.5, -4);
-    g_scene.add(radarBase);
+    towerGroup.add(radarBase);
 
     const radarDishGeo = new THREE.SphereGeometry(2, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
     const radarDish = new THREE.Mesh(radarDishGeo, metalMat);
     radarDish.position.set(-4, 34, -4);
     radarDish.rotation.x = Math.PI / 4;
-    g_scene.add(radarDish);
+    towerGroup.add(radarDish);
 
     // 10. Communication Antennas - Dark Metal
     const ant1Geo = new THREE.BoxGeometry(0.2, 8, 0.2);
     const ant1 = new THREE.Mesh(ant1Geo, metalMat);
     ant1.position.set(-6, 35.5, 6);
-    g_scene.add(ant1);
+    towerGroup.add(ant1);
 
     const ant2Geo = new THREE.BoxGeometry(0.1, 10, 0.1);
     const ant2 = new THREE.Mesh(ant2Geo, metalMat);
     ant2.position.set(6, 36.5, -6);
-    g_scene.add(ant2);
+    towerGroup.add(ant2);
 
     const ant3Geo = new THREE.BoxGeometry(0.5, 4, 0.5);
     const ant3Mat = new THREE.MeshPhongMaterial({ color: metalMat.color });
     const ant3 = new THREE.Mesh(ant3Geo, ant3Mat);
     ant3.position.set(0, 33.5, 0);
-    g_scene.add(ant3);
+    towerGroup.add(ant3);
+
+    towerGroup.position.set(x, y, z);
+    g_scene.add(towerGroup);
 }
 
-function plane_hangar() {
+function plane_hangar(x = 0, y = 0, z = 0) {
     // Materials
     const deltaBlueMat = new THREE.MeshPhongMaterial({ color: '#003366' });
     const deltaRedMat = new THREE.MeshPhongMaterial({ color: '#E03A3E' });
@@ -225,36 +230,126 @@ function plane_hangar() {
     logo.rotation.y = Math.PI / 4;
     hangarGroup.add(logo);
 
-    hangarGroup.position.set(40, 0, -40);
+    hangarGroup.position.set(x, y, z);
+    hangarGroup.rotation.set(0, -Math.PI / 2, 0);
     g_scene.add(hangarGroup);
 }
 
+function airport_terminal(x = 0, y = 0, z = 0) {
+    const terminalGroup = new THREE.Group();
+
+    // Materials
+    const wallMat = new THREE.MeshPhongMaterial({ color: '#EEEEEE' }); // Off-white concrete
+    const glassMat = new THREE.MeshPhongMaterial({
+        color: '#88CCFF',
+        transparent: true,
+        opacity: 0.6,
+        side: THREE.DoubleSide
+    });
+    const roofMat = new THREE.MeshPhongMaterial({ color: '#333333' }); // Dark gray roof
+    const metalMat = new THREE.MeshPhongMaterial({ color: '#777777' }); // Metal supports
+
+    // 1. Central Hall (Main Building)
+    const mainHallGeo = new THREE.BoxGeometry(60, 20, 40);
+    const mainHall = new THREE.Mesh(mainHallGeo, wallMat);
+    mainHall.position.y = 10;
+    terminalGroup.add(mainHall);
+
+    // 2. Large Glass Facade (Front)
+    const glassGeo = new THREE.PlaneGeometry(50, 15);
+    const glassFront = new THREE.Mesh(glassGeo, glassMat);
+    glassFront.position.set(0, 10, 20.1);
+    terminalGroup.add(glassFront);
+
+    // 3. Concourse Wings (Left & Right)
+    const wingGeo = new THREE.BoxGeometry(100, 12, 20);
+
+    const wingL = new THREE.Mesh(wingGeo, wallMat);
+    wingL.position.set(-80, 6, -10);
+    terminalGroup.add(wingL);
+
+    const wingR = new THREE.Mesh(wingGeo, wallMat);
+    wingR.position.set(80, 6, -10);
+    terminalGroup.add(wingR);
+
+    // 4. Glass Windows for Wings
+    const wingGlassGeo = new THREE.BoxGeometry(90, 8, 20.2);
+    const wingGlassL = new THREE.Mesh(wingGlassGeo, glassMat);
+    wingGlassL.position.set(-80, 6, -10);
+    terminalGroup.add(wingGlassL);
+
+    const wingGlassR = new THREE.Mesh(wingGlassGeo, glassMat);
+    wingGlassR.position.set(80, 6, -10);
+    terminalGroup.add(wingGlassR);
+
+    // 5. Curved Roof Detail (Main Hall)
+    const roofCurveGeo = new THREE.CylinderGeometry(40, 40, 65, 32, 1, false, 0, Math.PI);
+    const roofCurve = new THREE.Mesh(roofCurveGeo, roofMat);
+    roofCurve.rotation.z = Math.PI / 2;
+    roofCurve.rotation.y = Math.PI;
+    roofCurve.position.set(0, 15, 0);
+    roofCurve.scale.set(1, 0.2, 0.7);
+    terminalGroup.add(roofCurve);
+
+    // 6. Jet Bridges (Simplified)
+    const createJetBridge = (posX, posZ) => {
+        const bridgeGroup = new THREE.Group();
+
+        const tubeGeo = new THREE.BoxGeometry(4, 4, 15);
+        const tube = new THREE.Mesh(tubeGeo, metalMat);
+        tube.position.z = 7.5;
+        bridgeGroup.add(tube);
+
+        const headGeo = new THREE.BoxGeometry(6, 6, 6);
+        const head = new THREE.Mesh(headGeo, metalMat);
+        head.position.z = 15;
+        bridgeGroup.add(head);
+
+        bridgeGroup.position.set(posX, 6, posZ);
+        return bridgeGroup;
+    };
+
+    // Add some jet bridges to the wings
+    terminalGroup.add(createJetBridge(-60, -20));
+    terminalGroup.add(createJetBridge(-100, -20));
+    terminalGroup.add(createJetBridge(60, -20));
+    terminalGroup.add(createJetBridge(100, -20));
+
+    terminalGroup.position.set(x, y, z);
+    terminalGroup.rotation.set(0, Math.PI / 2, 0);
+    g_scene.add(terminalGroup);
+}
+
 function basic_figures() {
-    control_tower();
-    plane_hangar();
+    control_tower(-50, 0, -100);
+    plane_hangar(80, 0, -80);
+    plane_hangar(80, 0, 80);
 
-    const cubeSize = 4;
-    const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-    const cubeMat = new THREE.MeshPhongMaterial({ color: '#8AC' });
-    const mesh_cube = new THREE.Mesh(cubeGeo, cubeMat);
-    mesh_cube.position.set(cubeSize + 1, cubeSize / 2, 0);
-    g_scene.add(mesh_cube);
+    airport_terminal(-120, 0, 0);
 
-    const sphereRadius = 3;
-    const sphereWidthDivisions = 32;
-    const sphereHeightDivisions = 16;
-    const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
-    const sphereMat = new THREE.MeshPhongMaterial({ color: '#CA8' });
-    const mesh_sphere = new THREE.Mesh(sphereGeo, sphereMat);
-    mesh_sphere.position.set(-sphereRadius - 1, sphereRadius + 2, 0);
-    g_scene.add(mesh_sphere);
+    // const cubeSize = 4;
+    // const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+    // const cubeMat = new THREE.MeshPhongMaterial({ color: '#8AC' });
+    // const mesh_cube = new THREE.Mesh(cubeGeo, cubeMat);
+    // mesh_cube.position.set(cubeSize + 1, cubeSize / 2, 0);
+    // g_scene.add(mesh_cube);
 
-    g_texture = g_loader.load('../textures/wall.jpg');
-    const material = new THREE.MeshBasicMaterial({
+    // const sphereRadius = 3;
+    // const sphereWidthDivisions = 32;
+    // const sphereHeightDivisions = 16;
+    // const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
+    // const sphereMat = new THREE.MeshPhongMaterial({ color: '#CA8' });
+    // const mesh_sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    // mesh_sphere.position.set(-sphereRadius - 1, sphereRadius + 2, 0);
+    // g_scene.add(mesh_sphere);
+
+    g_texture = g_loader.load('../textures/3561.jpg');
+    const material = new THREE.MeshPhongMaterial({
         map: g_texture,
     });
-    const geometry = new THREE.BoxGeometry(5, 5, 5);
+    const geometry = new THREE.BoxGeometry(10, 10, 10);
     const cube = new THREE.Mesh(geometry, material);
+    cube.position.set(0, 5, 0);
     g_scene.add(cube);
 }
 
@@ -295,47 +390,44 @@ function lighting() {
     point_light();
 }
 
-function my_objs() {
+function load_obj(mtl_route, obj_route, position = [0, 0, 0], scale = 1, rotation = { x: 0, y: 0, z: 0 }) {
     const mtlLoader = new MTLLoader();
-    const airplane_positions = [
-        [-100, 0, -100],
-        [-100, 0, -80],
-        [-100, 0, -60],
-        [-100, 0, -40],
-        [-100, 0, -20],
-        [-100, 0, 0],
-        [-100, 0, 20],
-        [-100, 0, 40],
-        [-100, 0, 60],
-        [-100, 0, 80],
-        [-100, 0, 100],
-        [100, 0, -100],
-        [100, 0, -80],
-        [100, 0, -60],
-        [100, 0, -40],
-        [100, 0, -20],
-        [100, 0, 0],
-        [100, 0, 20],
-        [100, 0, 40],
-        [100, 0, 60],
-        [100, 0, 80],
-        [100, 0, 100],
-        [0, 0, 0],
-    ];
-    airplane_positions.forEach((position) => {
-        mtlLoader.load('../models/airplane/airplane_.mtl', (mtl) => {
-            mtl.preload();
-            const objLoader = new OBJLoader();
-            objLoader.setMaterials(mtl);
-            objLoader.load('../models/airplane/airplane_.obj', (root) => {
-                root.rotation.y = Math.PI * 3 / 5;
-                root.position.set(...position);
-                root.scale.set(0.3, 0.3, 0.3);
-                g_scene.add(root);
-            });
+    mtlLoader.load(mtl_route, (mtl) => {
+        mtl.preload();
+        const objLoader = new OBJLoader();
+        objLoader.setMaterials(mtl);
+        objLoader.load(obj_route, (root) => {
+            root.position.set(...position);
+            root.scale.set(scale, scale, scale);
+            root.rotation.set(rotation.x, rotation.y, rotation.z);
+            g_scene.add(root);
         });
     });
+}
 
+function my_objs() {
+    const airplanes = [
+        { position: [-100, 0, -100], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-100, 0, -80], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-100, 0, -60], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-100, 0, -40], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-80, 0, -20], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-80, 0, 0], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-80, 0, 20], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-100, 0, 40], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-100, 0, 60], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-100, 0, 80], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [-100, 0, 100], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [80, 0, -40], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [80, 0, -20], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [80, 0, 0], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [80, 0, 20], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [80, 0, 40], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
+        { position: [0, 0, 0], scale: 0.3, rotation: { x: 0, y: 0, z: 0 } },
+    ];
+    airplanes.forEach((plane) => {
+        load_obj('../models/airplane/airplane_.mtl', '../models/airplane/airplane_.obj', plane.position, plane.scale, plane.rotation);
+    });
 }
 
 function ui() {
@@ -424,6 +516,14 @@ function addActionstoUI() {
     startButton.addEventListener('click', () => {
         document.getElementById('introduction').style.display = 'none';
         document.getElementById('c').style.display = 'block';
+    });
+
+    document.getElementById('arrow-icon').addEventListener('click', () => {
+        console.log("Arrow clicked");
+        const flights = document.getElementById('flights');
+        flights.style.display = flights.style.display === 'none' ? 'block' : 'none';
+        const arrowIcon = document.getElementById('arrow-icon');
+        arrowIcon.style.transform = arrowIcon.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
     });
 }
 
