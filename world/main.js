@@ -89,7 +89,150 @@ function floor() {
     g_scene.add(mesh);
 }
 
+function control_tower() {
+    // Materials
+    const concreteMat = new THREE.MeshPhongMaterial({ color: '#888888' });
+    const whiteMat = new THREE.MeshPhongMaterial({ color: '#FFFFFF' });
+    const redMat = new THREE.MeshPhongMaterial({ color: '#CC0000' }); // Aviation warning color
+    const glassMat = new THREE.MeshPhongMaterial({ color: '#224466' }); // Observation cab glass
+    const metalMat = new THREE.MeshPhongMaterial({ color: '#444444' }); // Antennas/Technical equipment
+    const radomeMat = new THREE.MeshPhongMaterial({ color: '#EEEEEE' }); // Off-white for radome
+
+    // 1. Foundation - Concrete
+    const baseGeo = new THREE.BoxGeometry(12, 1, 12);
+    const base = new THREE.Mesh(baseGeo, concreteMat);
+    base.position.set(0, 0.5, 0);
+    g_scene.add(base);
+
+    // 2. Main Shaft - Level 1 (Lower) - White
+    const shaft1Geo = new THREE.BoxGeometry(7, 12, 7);
+    const shaft1 = new THREE.Mesh(shaft1Geo, whiteMat);
+    shaft1.position.set(0, 7, 0);
+    g_scene.add(shaft1);
+
+    // 3. Main Shaft - Level 2 (Middle Taper Transition) - Red Stripe
+    const shaft2Geo = new THREE.BoxGeometry(8, 2, 8);
+    const shaft2 = new THREE.Mesh(shaft2Geo, redMat);
+    shaft2.position.set(0, 14, 0);
+    g_scene.add(shaft2);
+
+    // 4. Main Shaft - Level 3 (Upper) - White
+    const shaft3Geo = new THREE.BoxGeometry(7.5, 6, 7.5);
+    const shaft3 = new THREE.Mesh(shaft3Geo, whiteMat);
+    shaft3.position.set(0, 18, 0);
+    g_scene.add(shaft3);
+
+    // 5. Technical Level (Under the Cab) - Red Detail
+    const techGeo = new THREE.BoxGeometry(10, 2, 10);
+    const tech = new THREE.Mesh(techGeo, redMat);
+    tech.position.set(0, 22, 0);
+    g_scene.add(tech);
+
+    // 6. Observation Cab - Blue Glass Body
+    const cabGeo = new THREE.BoxGeometry(14, 8, 14);
+    const cab = new THREE.Mesh(cabGeo, glassMat);
+    cab.position.set(0, 27, 0);
+    g_scene.add(cab);
+
+    // 7. Roof / Sun Shield - White
+    const roofGeo = new THREE.BoxGeometry(16, 1, 16);
+    const roof = new THREE.Mesh(roofGeo, whiteMat);
+    roof.position.set(0, 31.5, 0);
+    g_scene.add(roof);
+
+    // 8. Radome (Secondary Radar) - Radome White
+    const radomeGeo = new THREE.SphereGeometry(2.5, 32, 16);
+    const radome = new THREE.Mesh(radomeGeo, radomeMat);
+    radome.position.set(4, 34, 4);
+    g_scene.add(radome);
+
+    // 9. Main Radar Antenna - Metal/Gray
+    const radarBaseGeo = new THREE.BoxGeometry(3, 1, 3);
+    const radarBase = new THREE.Mesh(radarBaseGeo, metalMat);
+    radarBase.position.set(-4, 32.5, -4);
+    g_scene.add(radarBase);
+
+    const radarDishGeo = new THREE.SphereGeometry(2, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    const radarDish = new THREE.Mesh(radarDishGeo, metalMat);
+    radarDish.position.set(-4, 34, -4);
+    radarDish.rotation.x = Math.PI / 4;
+    g_scene.add(radarDish);
+
+    // 10. Communication Antennas - Dark Metal
+    const ant1Geo = new THREE.BoxGeometry(0.2, 8, 0.2);
+    const ant1 = new THREE.Mesh(ant1Geo, metalMat);
+    ant1.position.set(-6, 35.5, 6);
+    g_scene.add(ant1);
+
+    const ant2Geo = new THREE.BoxGeometry(0.1, 10, 0.1);
+    const ant2 = new THREE.Mesh(ant2Geo, metalMat);
+    ant2.position.set(6, 36.5, -6);
+    g_scene.add(ant2);
+
+    const ant3Geo = new THREE.BoxGeometry(0.5, 4, 0.5);
+    const ant3Mat = new THREE.MeshPhongMaterial({ color: metalMat.color });
+    const ant3 = new THREE.Mesh(ant3Geo, ant3Mat);
+    ant3.position.set(0, 33.5, 0);
+    g_scene.add(ant3);
+}
+
+function plane_hangar() {
+    // Materials
+    const deltaBlueMat = new THREE.MeshPhongMaterial({ color: '#003366' });
+    const deltaRedMat = new THREE.MeshPhongMaterial({ color: '#E03A3E' });
+    const deltaWhiteMat = new THREE.MeshPhongMaterial({ color: '#FFFFFF' });
+    const hangarWallMat = new THREE.MeshPhongMaterial({ color: '#DDDDDD' });
+
+    const hangarGroup = new THREE.Group();
+
+    // 1. Main Hall
+    const bodyGeo = new THREE.BoxGeometry(40, 15, 30);
+    const body = new THREE.Mesh(bodyGeo, hangarWallMat);
+    body.position.set(0, 7.5, 0);
+    hangarGroup.add(body);
+
+    // 2. Roof - Blue with Red detail
+    const roofGeo = new THREE.BoxGeometry(42, 2, 32);
+    const roof = new THREE.Mesh(roofGeo, deltaBlueMat);
+    roof.position.set(0, 15.5, 0);
+    hangarGroup.add(roof);
+
+    const roofRidgeGeo = new THREE.BoxGeometry(42, 0.5, 2);
+    const roofRidge = new THREE.Mesh(roofRidgeGeo, deltaRedMat);
+    roofRidge.position.set(0, 16.5, 0);
+    hangarGroup.add(roofRidge);
+
+    // 3. Doors - Front
+    const doorGeo = new THREE.BoxGeometry(18, 12, 1);
+    const doorL = new THREE.Mesh(doorGeo, deltaWhiteMat);
+    doorL.position.set(-9.5, 6, 15.1);
+    hangarGroup.add(doorL);
+
+    const doorR = new THREE.Mesh(doorGeo, deltaWhiteMat);
+    doorR.position.set(9.5, 6, 15.1);
+    hangarGroup.add(doorR);
+
+    // 4. Windows/Details
+    const windowGeo = new THREE.BoxGeometry(38, 2, 0.5);
+    const topWindows = new THREE.Mesh(windowGeo, deltaBlueMat);
+    topWindows.position.set(0, 13, 15);
+    hangarGroup.add(topWindows);
+
+    // 5. Delta "Logo" 
+    const logoGeo = new THREE.SphereGeometry(2, 4, 2); // Pyramid-ish
+    const logo = new THREE.Mesh(logoGeo, deltaRedMat);
+    logo.position.set(0, 18, 0);
+    logo.rotation.y = Math.PI / 4;
+    hangarGroup.add(logo);
+
+    hangarGroup.position.set(40, 0, -40);
+    g_scene.add(hangarGroup);
+}
+
 function basic_figures() {
+    control_tower();
+    plane_hangar();
+
     const cubeSize = 4;
     const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
     const cubeMat = new THREE.MeshPhongMaterial({ color: '#8AC' });
