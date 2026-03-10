@@ -419,11 +419,21 @@ function createStats() {
     document.body.appendChild(stats.dom);
 }
 
+function addActionstoUI() {
+    const startButton = document.getElementById('start-button');
+    startButton.addEventListener('click', () => {
+        document.getElementById('introduction').style.display = 'none';
+        document.getElementById('c').style.display = 'block';
+    });
+}
+
 function main() {
     threejs_setup();            // Inizialiton of global variables: canvas, camera & renderer
     create_controls();          // Creates orbit controls
     texture_loader();           // Texture loading manager and progress bar at the beginning
     createStats();
+
+    addActionstoUI();
 
     // Render scene
     floor();

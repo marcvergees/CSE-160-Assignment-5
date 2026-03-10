@@ -4,10 +4,23 @@
 <head>
     <meta charset="utf-8">
     <title>My first three.js app</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --delta-blue: #003366;
+            --delta-red: #E03A3E;
+            --white: #FFFFFF;
+            --navy-dark: #050b1a;
+        }
+
         body {
             margin: 0;
-            background-color: #222;
+            background-color: var(--navy-dark);
+            font-family: 'Outfit', sans-serif;
+            color: var(--white);
+            overflow: hidden;
         }
 
         #loading {
@@ -19,26 +32,250 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            background: var(--navy-dark);
+            z-index: 1000;
         }
 
         #loading .progress {
             margin: 1.5em;
-            border: 1px solid white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 50vw;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
         #loading .progressbar {
             margin: 2px;
-            background: white;
-            height: 1em;
+            background: var(--delta-red);
+            height: 0.5em;
             transform-origin: top left;
             transform: scaleX(0);
+            transition: transform 0.1s ease-out;
+        }
+
+        #introduction {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a3d6d 0%, var(--navy-dark) 100%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .logo-container {
+            margin-bottom: 2rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .logo-container img {
+            width: 300px;
+            height: auto;
+            filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -1px;
+            background: linear-gradient(to bottom, #fff 0%, #ccc 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeIn 1.5s ease-out;
+        }
+
+        p {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin: 1rem 0 3rem;
+            opacity: 0.8;
+            animation: fadeIn 2s ease-out;
+        }
+
+        #start-button {
+            padding: 1rem 4rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--white);
+            background-color: var(--delta-red);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(224, 58, 62, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        #start-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            background-color: #f74d53;
+            box-shadow: 0 15px 40px rgba(224, 58, 62, 0.6);
+        }
+
+        #start-button:active {
+            transform: translateY(0) scale(0.98);
         }
 
         #c {
             width: 100vw;
             height: 100vh;
             display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #flights {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #next-flights {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 380px;
+            background-color: rgba(49, 47, 52, 0.95);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            font-family: "Outfit", sans-serif;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .flights-header {
+            background-color: #3d3b41;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #eee;
+        }
+
+        .live-badge {
+            background-color: #fce100;
+            color: black;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-weight: 900;
+        }
+
+        .help-icon {
+            margin-left: 10px;
+            color: #999;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .arrow-icon {
+            margin-left: auto;
+            color: #999;
+            transform: rotate(180deg);
+            cursor: pointer;
+            font-size: large;
+        }
+
+        .flight-card {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .flight-card:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .flight-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .flight-id {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .model-badge {
+            background-color: #435b75;
+            color: #b8d4f4;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .trackers {
+            color: #fce100;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .flight-bottom {
+            color: #ccc;
+            font-size: 1rem;
+        }
+
+        .airport-code {
+            display: inline-block;
+            background-color: #333;
+            padding: 0 4px;
+            border-radius: 3px;
+            border: 1px solid #555;
+            font-size: 0.8rem;
+            margin: 0 4px;
+            color: #aaa;
         }
     </style>
     <script type="importmap">
@@ -57,7 +294,51 @@
             <div class="progressbar"></div>
         </div>
     </div>
-    <canvas id="c"></canvas>
+    <div id="introduction">
+        <div class="logo-container">
+            <img src="../img/delta_w_r.png" alt="Delta Logo">
+        </div>
+        <h1>Santa Cruz - Delta Airport</h1>
+        <p>Premium aviation experience. Ground operations ready.</p>
+        <button id="start-button">Enter Airport</button>
+    </div>
+    <canvas id="c" style="display: none;"></canvas>
+    <div id="next-flights">
+        <div class="flights-header">
+            <span>Most tracked flights</span>
+            <span class="live-badge">LIVE</span>
+            <span class="arrow-icon">^</span>
+        </div>
+        <ul id="flights">
+            <li class="flight-card">
+                <div class="flight-top">
+                    <span class="flight-id">1. Delta Airlines <span class="model-badge">B737</span></span>
+                    <span class="trackers">9,266</span>
+                </div>
+                <div class="flight-bottom">
+                    Barcelona <span class="airport-code">BCN</span> - Santa Cruz <span class="airport-code">UCSC</span>
+                </div>
+            </li>
+            <li class="flight-card">
+                <div class="flight-top">
+                    <span class="flight-id">2. British Airways <span class="model-badge">B737</span></span>
+                    <span class="trackers">9,113</span>
+                </div>
+                <div class="flight-bottom">
+                    Manchester <span class="airport-code">MAN</span> - Santa Cruz <span class="airport-code">UCSC</span>
+                </div>
+            </li>
+            <li class="flight-card">
+                <div class="flight-top">
+                    <span class="flight-id">3. GFA9105 <span class="model-badge">A21N</span></span>
+                    <span class="trackers">8,867</span>
+                </div>
+                <div class="flight-bottom">
+                    Bahrain <span class="airport-code">BAH</span> - Santa Cruz <span class="airport-code">UCSC</span>
+                </div>
+            </li>
+        </ul>
+    </div>
     <script type="module" src="main.js"></script>
 </body>
 
