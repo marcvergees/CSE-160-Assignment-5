@@ -26,10 +26,11 @@ var g_controls;
 let g_landing_animation = null;
 let g_takeoff_animation = null; // New state for Takeoff
 let g_taxi_animation = null;
+let isDarkMode = false;
 var stats;
 
 // Constants
-const planeSize = 200;
+const planeSize = 250;
 
 
 
@@ -506,9 +507,9 @@ function ui() {
 
     function makeXYZGUI(gui, vector3, name, onChangeFn) {
         const folder = gui.addFolder(name);
-        folder.add(vector3, 'x', -10, 10).onChange(onChangeFn);
+        folder.add(vector3, 'x', -100, 100).onChange(onChangeFn);
         folder.add(vector3, 'y', 0, 10).onChange(onChangeFn);
-        folder.add(vector3, 'z', -10, 10).onChange(onChangeFn);
+        folder.add(vector3, 'z', -100, 100).onChange(onChangeFn);
         folder.open();
     }
 
@@ -539,7 +540,7 @@ function ui() {
 
     const pointLightFolder = gui.addFolder('Point Light');
     pointLightFolder.addColor(new ColorGUIHelper(g_light_point, 'color'), 'value').name('color');
-    pointLightFolder.add(g_light_point, 'intensity', 0, 150, 1);
+    pointLightFolder.add(g_light_point, 'intensity', 0, 250, 1);
     makeXYZGUI(pointLightFolder, g_light_point.position, 'position', updateLight);
 
     const ambientLightFolder = gui.addFolder('Ambient Light');
@@ -759,6 +760,34 @@ function addActionstoUI() {
         flights.style.display = flights.style.display === 'none' ? 'block' : 'none';
         const arrowIcon = document.getElementById('arrow-icon');
         arrowIcon.style.transform = arrowIcon.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        isDarkMode = !isDarkMode;
+        const btn = document.getElementById('theme-toggle');
+        if (isDarkMode) {
+            btn.innerText = "Toggle Light Mode";
+            // Dark mode lighting
+            g_light_ambient.color.setHex(0x222244);
+            g_light_ambient.intensity = 0.5;
+
+            g_light_directional.color.setHex(0x111133);
+            g_light_directional.intensity = 0.5;
+
+            g_light_point.color.setHex(0xffaa55); // Warm, street-light glow
+            g_light_point.intensity = 150; 
+        } else {
+            btn.innerText = "Toggle Dark Mode";
+            // Light mode lighting
+            g_light_ambient.color.setHex(0xFFFFFF);
+            g_light_ambient.intensity = 1;
+
+            g_light_directional.color.setHex(0xFFFFFF);
+            g_light_directional.intensity = 1;
+
+            g_light_point.color.setHex(0xFFFFFF);
+            g_light_point.intensity = 150;
+        }
     });
 
     document.getElementById("land-button").addEventListener('click', land_plane);

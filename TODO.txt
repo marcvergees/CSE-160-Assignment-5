@@ -3,8 +3,6 @@ readme
 refactoring
 
 LIGHTING:
-lighting sliders adjust to the correct values of the whole ground
-
 turn a little bit the sky cube, so that the ground is aligned with the runway
 
 CAMERA:
