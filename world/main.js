@@ -4,9 +4,7 @@ import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 import { ColorGUIHelper } from "../helpers/ColorGUIHelper.js";
-import { DegRadHelper } from "../helpers/DegRadHelper.js";
 import { MinMaxGUIHelper } from "../helpers/MinMaxGUIHelper.js";
-import { StringToNumberHelper } from "../helpers/StringToNumberHelper.js";
 import { Stats } from "../lib/stats.js";
 
 // Global Variables
@@ -21,18 +19,16 @@ var g_light_point;
 var g_light_point_helper;
 var g_light_ambient;
 var g_texture;
-var g_bgTexture;
 var g_controls;
 let g_landing_animation = null;
 let g_takeoff_animation = null; // New state for Takeoff
-let g_taxi_animation = null;
 let isDarkMode = false;
+let isTowerView = false;
+let originalCameraPos = new THREE.Vector3(0, 10, 20);
 var stats;
 
 // Constants
 const planeSize = 250;
-
-
 
 function threejs_setup() {
     g_canvas = document.querySelector('#c');
@@ -497,9 +493,6 @@ function my_objs() {
 }
 
 function ui() {
-    function updateTexture() {
-        if (g_texture) g_texture.needsUpdate = true;
-    }
 
     function updateCamera() {
         g_camera.updateProjectionMatrix();
@@ -520,11 +513,6 @@ function ui() {
         g_light_point_helper.update();
     }
 
-    const wrapModes = {
-        'ClampToEdgeWrapping': THREE.ClampToEdgeWrapping,
-        'RepeatWrapping': THREE.RepeatWrapping,
-        'MirroredRepeatWrapping': THREE.MirroredRepeatWrapping,
-    };
 
     const gui = new GUI();
     gui.add(g_camera, 'fov', 1, 180).onChange(updateCamera);
@@ -775,7 +763,7 @@ function addActionstoUI() {
             g_light_directional.intensity = 0.5;
 
             g_light_point.color.setHex(0xffaa55); // Warm, street-light glow
-            g_light_point.intensity = 150; 
+            g_light_point.intensity = 150;
         } else {
             btn.innerText = "Toggle Dark Mode";
             // Light mode lighting
@@ -787,6 +775,28 @@ function addActionstoUI() {
 
             g_light_point.color.setHex(0xFFFFFF);
             g_light_point.intensity = 150;
+        }
+    });
+
+    document.getElementById('tower-view-toggle').addEventListener('click', () => {
+        isTowerView = !isTowerView;
+        const btn = document.getElementById('tower-view-toggle');
+
+        if (isTowerView) {
+            btn.innerText = "Toggle Normal View";
+            // Save current position as potential "original" if it's not already tower
+            originalCameraPos.copy(g_camera.position);
+
+            // Move to tower top: (-50, 31.5, -100)
+            g_camera.position.set(-50, 40, -100);
+            g_controls.target.set(0, 0, 0); // Focus on runway/center
+            g_controls.update();
+        } else {
+            btn.innerText = "Toggle Tower View";
+            // Restore to (0, 10, 20) looking at (0,0,0) as requested
+            g_camera.position.set(0, 10, 20);
+            g_controls.target.set(0, 0, 0);
+            g_controls.update();
         }
     });
 
