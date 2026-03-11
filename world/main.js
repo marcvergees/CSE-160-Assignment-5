@@ -23,10 +23,14 @@ var g_light_ambient;
 var g_texture;
 var g_bgTexture;
 var g_controls;
+let g_landing_animation = null;
+let g_takeoff_animation = null; // New state for Takeoff
+let g_taxi_animation = null;
 var stats;
 
 // Constants
 const planeSize = 200;
+
 
 
 function threejs_setup() {
@@ -87,7 +91,83 @@ function floor() {
     const mesh = new THREE.Mesh(planeGeo, planeMat);
     mesh.rotation.x = Math.PI * -.5;
     g_scene.add(mesh);
+
+
+    const runwayGeo = new THREE.BoxGeometry(40, 0.5, 200);
+    const runwayMat = new THREE.MeshPhongMaterial({ color: 'rgb(33, 33, 33)' });
+    const runway = new THREE.Mesh(runwayGeo, runwayMat);
+    runway.position.set(0, 0, 0);
+    g_scene.add(runway);
+
+    // --- Realistic Runway Markings ---
+    const whiteLineMat = new THREE.MeshPhongMaterial({ color: '#FFFFFF' });
+
+    // 1. Edge lines (Solid lines on the boundaries)
+    const edgeLineGeo = new THREE.BoxGeometry(0.5, 0.1, 198);
+    const leftEdge = new THREE.Mesh(edgeLineGeo, whiteLineMat);
+    leftEdge.position.set(-18.5, 0.26, 0);
+    g_scene.add(leftEdge);
+
+    const rightEdge = new THREE.Mesh(edgeLineGeo, whiteLineMat);
+    rightEdge.position.set(18.5, 0.26, 0);
+    g_scene.add(rightEdge);
+
+    // 2. Center dashed line
+    const centerLineGeo = new THREE.BoxGeometry(0.5, 0.1, 4);
+    for (let z = -60; z <= 60; z += 12) {
+        const line = new THREE.Mesh(centerLineGeo, whiteLineMat);
+        line.position.set(0, 0.26, z);
+        g_scene.add(line);
+    }
+
+    // 3. Threshold markings (Piano keys at the start/end)
+    const thresholdGeo = new THREE.BoxGeometry(1.2, 0.1, 10);
+    for (let x = -14; x <= 14; x += 3.5) {
+        if (Math.abs(x) < 2) continue; // Gap in the exact center
+
+        const northStripe = new THREE.Mesh(thresholdGeo, whiteLineMat);
+        northStripe.position.set(x, 0.26, -92);
+        g_scene.add(northStripe);
+
+        const southStripe = new THREE.Mesh(thresholdGeo, whiteLineMat);
+        southStripe.position.set(x, 0.26, 92);
+        g_scene.add(southStripe);
+    }
+
+    // 4. Aiming point markers (Large solid blocks)
+    const aimPointGeo = new THREE.BoxGeometry(4, 0.1, 15);
+    const aimPoints = [
+        { x: -8, z: -75 }, { x: 8, z: -75 }, // North side aiming points
+        { x: -8, z: 75 }, { x: 8, z: 75 }    // South side aiming points
+    ];
+    aimPoints.forEach(pos => {
+        const aimMesh = new THREE.Mesh(aimPointGeo, whiteLineMat);
+        aimMesh.position.set(pos.x, 0.26, pos.z);
+        g_scene.add(aimMesh);
+    });
+
+    // 5. Touchdown zone markings (Pairs of multiple bars)
+    const tdZoneGeo = new THREE.BoxGeometry(1.2, 0.1, 6);
+    const tdZPositions = [
+        { z: -60, count: 3 }, { z: -45, count: 2 }, { z: -30, count: 1 },
+        { z: 60, count: 3 }, { z: 45, count: 2 }, { z: 30, count: 1 }
+    ];
+
+    tdZPositions.forEach(zone => {
+        for (let c = 0; c < zone.count; c++) {
+            // Left blocks
+            const tdL = new THREE.Mesh(tdZoneGeo, whiteLineMat);
+            tdL.position.set(-6 - (c * 2), 0.26, zone.z);
+            g_scene.add(tdL);
+
+            // Right blocks
+            const tdR = new THREE.Mesh(tdZoneGeo, whiteLineMat);
+            tdR.position.set(6 + (c * 2), 0.26, zone.z);
+            g_scene.add(tdR);
+        }
+    });
 }
+
 
 function control_tower(x = 0, y = 0, z = 0) {
     // Materials
@@ -327,29 +407,13 @@ function basic_figures() {
 
     airport_terminal(-120, 0, 0);
 
-    // const cubeSize = 4;
-    // const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-    // const cubeMat = new THREE.MeshPhongMaterial({ color: '#8AC' });
-    // const mesh_cube = new THREE.Mesh(cubeGeo, cubeMat);
-    // mesh_cube.position.set(cubeSize + 1, cubeSize / 2, 0);
-    // g_scene.add(mesh_cube);
-
-    // const sphereRadius = 3;
-    // const sphereWidthDivisions = 32;
-    // const sphereHeightDivisions = 16;
-    // const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
-    // const sphereMat = new THREE.MeshPhongMaterial({ color: '#CA8' });
-    // const mesh_sphere = new THREE.Mesh(sphereGeo, sphereMat);
-    // mesh_sphere.position.set(-sphereRadius - 1, sphereRadius + 2, 0);
-    // g_scene.add(mesh_sphere);
-
     g_texture = g_loader.load('../textures/3561.jpg');
     const material = new THREE.MeshPhongMaterial({
         map: g_texture,
     });
     const geometry = new THREE.BoxGeometry(10, 10, 10);
     const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(0, 5, 0);
+    cube.position.set(25, 5, 0);
     g_scene.add(cube);
 }
 
@@ -390,7 +454,7 @@ function lighting() {
     point_light();
 }
 
-function load_obj(mtl_route, obj_route, position = [0, 0, 0], scale = 1, rotation = { x: 0, y: 0, z: 0 }) {
+function load_obj(mtl_route, obj_route, position = [0, 0, 0], scale = 1, rotation = { x: 0, y: 0, z: 0 }, callback = null) {
     const mtlLoader = new MTLLoader();
     mtlLoader.load(mtl_route, (mtl) => {
         mtl.preload();
@@ -401,6 +465,7 @@ function load_obj(mtl_route, obj_route, position = [0, 0, 0], scale = 1, rotatio
             root.scale.set(scale, scale, scale);
             root.rotation.set(rotation.x, rotation.y, rotation.z);
             g_scene.add(root);
+            if (callback) callback(root);
         });
     });
 }
@@ -423,7 +488,7 @@ function my_objs() {
         { position: [80, 0, 0], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
         { position: [80, 0, 20], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
         { position: [80, 0, 40], scale: 0.3, rotation: { x: 0, y: Math.PI * 3 / 5, z: 0 } },
-        { position: [0, 0, 0], scale: 0.3, rotation: { x: 0, y: 0, z: 0 } },
+        // { position: [0, 0, 0], scale: 0.3, rotation: { x: 0, y: Math.PI / 10, z: 0 } },
     ];
     airplanes.forEach((plane) => {
         load_obj('../models/airplane/airplane_.mtl', '../models/airplane/airplane_.obj', plane.position, plane.scale, plane.rotation);
@@ -461,21 +526,6 @@ function ui() {
     };
 
     const gui = new GUI();
-    // Texture UI Configuration
-    // gui.add(new StringToNumberHelper(g_texture, 'wrapS'), 'value', wrapModes)
-    //     .name('texture.wrapS')
-    //     .onChange(updateTexture);
-    // gui.add(new StringToNumberHelper(g_texture, 'wrapT'), 'value', wrapModes)
-    //     .name('texture.wrapT')
-    //     .onChange(updateTexture);
-    // gui.add(g_texture.repeat, 'x', 0, 5, .01).name('texture.repeat.x');
-    // gui.add(g_texture.repeat, 'y', 0, 5, .01).name('texture.repeat.y');
-    // gui.add(g_texture.offset, 'x', -2, 2, .01).name('texture.offset.x');
-    // gui.add(g_texture.offset, 'y', -2, 2, .01).name('texture.offset.y');
-    // gui.add(g_texture.center, 'x', -.5, 1.5, .01).name('texture.center.x');
-    // gui.add(g_texture.center, 'y', -.5, 1.5, .01).name('texture.center.y');
-    // gui.add(new DegRadHelper(g_texture, 'rotation'), 'value', -360, 360)
-    //     .name('texture.rotation');
     gui.add(g_camera, 'fov', 1, 180).onChange(updateCamera);
     const minMaxGUIHelper = new MinMaxGUIHelper(g_camera, 'near', 'far', 0.1);
     gui.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updateCamera);
@@ -499,6 +549,159 @@ function ui() {
 
 function animate() {
     stats.begin();
+
+    if (g_landing_animation) {
+        if (g_landing_animation.waitingForTaxi) {
+            // Plane is waiting for user input, do nothing and let scene render
+        } else if (g_landing_animation.phase === 'taxi') {
+            // Phase 3: Taxi to destination
+            const now = performance.now();
+            const elapsed = now - g_landing_animation.taxiStartTime;
+            const t = Math.min(elapsed / g_landing_animation.taxiDuration, 1);
+
+            g_landing_animation.mesh.position.lerpVectors(
+                g_landing_animation.taxiStartPos,
+                g_landing_animation.taxiEndPos,
+                t
+            );
+
+            g_landing_animation.mesh.quaternion.slerpQuaternions(
+                g_landing_animation.taxiStartRot,
+                g_landing_animation.taxiEndRot,
+                t
+            );
+
+            if (t >= 1) {
+                console.log("Plane parked successfully.");
+                g_landing_animation = null; // Animation complete
+                document.getElementById('land-button').disabled = false;
+                document.getElementById('land-button').style.opacity = '1';
+                document.getElementById('land-button').style.cursor = 'pointer';
+
+                document.getElementById('takeoff-button').disabled = false;
+                document.getElementById('takeoff-button').style.opacity = '1';
+                document.getElementById('takeoff-button').style.cursor = 'pointer';
+            }
+        } else {
+            const now = performance.now();
+            const elapsed = now - g_landing_animation.startTime;
+            const t = elapsed / g_landing_animation.duration; // t goes from 0 to 2
+
+            g_landing_animation.mesh.position.lerpVectors(
+                t > 1 ? g_landing_animation.mid : g_landing_animation.start,
+                t > 1 ? g_landing_animation.end : g_landing_animation.mid,
+                t > 1 ? Math.sqrt(t - 1) : Math.sqrt(t)
+            );
+
+            if (t >= 2 && !g_landing_animation.waitingForTaxi) {
+                // Trigger taxi menu
+                g_landing_animation.waitingForTaxi = true;
+                const taxiMenu = document.getElementById('taxi-menu');
+                if (taxiMenu) {
+                    taxiMenu.style.display = 'block';
+                }
+            }
+        }
+    }
+
+    if (g_takeoff_animation) {
+        const now = performance.now();
+
+        if (g_takeoff_animation.phase === 'taxi_to_runway') {
+            const elapsed = now - g_takeoff_animation.startTime;
+            const t = Math.min(elapsed / g_takeoff_animation.duration, 1);
+
+            g_takeoff_animation.mesh.position.lerpVectors(
+                g_takeoff_animation.startPos,
+                g_takeoff_animation.endPos,
+                t
+            );
+            g_takeoff_animation.mesh.quaternion.slerpQuaternions(
+                g_takeoff_animation.startRot,
+                g_takeoff_animation.endRot,
+                t
+            );
+
+            if (t >= 1) {
+                // Transition to Sliding
+                g_takeoff_animation.phase = 'sliding';
+                g_takeoff_animation.startTime = performance.now();
+                g_takeoff_animation.duration = 2000; // Shorter sliding duration so it takes off earlier
+                g_takeoff_animation.startPos = g_takeoff_animation.mesh.position.clone();
+                g_takeoff_animation.endPos = new THREE.Vector3(0, 0, 0); // End slide at midpoint of runway instead of the very end
+
+                // Rotate to face down the runway (approx Positive Z)
+                g_takeoff_animation.startRot = g_takeoff_animation.mesh.quaternion.clone();
+                g_takeoff_animation.endRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0));
+                console.log("Plane taxi complete, starting runway slide...");
+            }
+        } else if (g_takeoff_animation.phase === 'sliding') {
+            const elapsed = now - g_takeoff_animation.startTime;
+            let t = Math.min(elapsed / g_takeoff_animation.duration, 1);
+
+            // Quadratic easing for acceleration down the runway
+            const easedT = t * t;
+
+            g_takeoff_animation.mesh.position.lerpVectors(
+                g_takeoff_animation.startPos,
+                g_takeoff_animation.endPos,
+                easedT
+            );
+            // Complete any remaining rotation in the first small fraction of sliding
+            g_takeoff_animation.mesh.quaternion.slerpQuaternions(
+                g_takeoff_animation.startRot,
+                g_takeoff_animation.endRot,
+                Math.min(t * 5, 1)
+            );
+
+            if (t >= 1) {
+                // Transition to Ascent
+                g_takeoff_animation.phase = 'ascent';
+                g_takeoff_animation.startTime = performance.now();
+                g_takeoff_animation.duration = 4000;
+                g_takeoff_animation.startPos = g_takeoff_animation.mesh.position.clone();
+                g_takeoff_animation.endPos = new THREE.Vector3(0, 100, 300); // Fly up and away in Positive Z
+
+                // Pitch up for takeoff
+                g_takeoff_animation.startRot = g_takeoff_animation.mesh.quaternion.clone();
+                g_takeoff_animation.endRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 8, 0, 0));
+                console.log("V1... Rotate... Takeoff!");
+            }
+        } else if (g_takeoff_animation.phase === 'ascent') {
+            const elapsed = now - g_takeoff_animation.startTime;
+            const t = Math.min(elapsed / g_takeoff_animation.duration, 1);
+
+            g_takeoff_animation.mesh.position.lerpVectors(
+                g_takeoff_animation.startPos,
+                g_takeoff_animation.endPos,
+                t
+            );
+            // Smoothly pitch up during the first half of ascent
+            g_takeoff_animation.mesh.quaternion.slerpQuaternions(
+                g_takeoff_animation.startRot,
+                g_takeoff_animation.endRot,
+                Math.min(t * 2, 1)
+            );
+
+            if (t >= 1) {
+                console.log("Plane has left the airspace.");
+                g_scene.remove(g_takeoff_animation.mesh);
+                g_takeoff_animation = null; // Animation complete
+
+                // Re-enable buttons
+                const landBtn = document.getElementById('land-button');
+                landBtn.disabled = false;
+                landBtn.style.opacity = '1';
+                landBtn.style.cursor = 'pointer';
+
+                const takeoffBtn = document.getElementById('takeoff-button');
+                takeoffBtn.disabled = false;
+                takeoffBtn.style.opacity = '1';
+                takeoffBtn.style.cursor = 'pointer';
+            }
+        }
+    }
+
     g_renderer.render(g_scene, g_camera);
     stats.end();
 }
@@ -511,9 +714,41 @@ function createStats() {
     document.body.appendChild(stats.dom);
 }
 
+function land_plane() {
+    if (g_landing_animation || g_takeoff_animation) return;
+
+    // Disable button styling
+    const landButton = document.getElementById('land-button');
+    landButton.disabled = true;
+    landButton.style.opacity = '0.5';
+    landButton.style.cursor = 'not-allowed';
+
+    const takeoffButton = document.getElementById('takeoff-button');
+    takeoffButton.disabled = true;
+    takeoffButton.style.opacity = '0.5';
+    takeoffButton.style.cursor = 'not-allowed';
+
+    const startPos = [0, 100, -300];
+    const midPos = [0, 0, 0];
+    const endPos = [0, 0, 100];
+    const duration = 5000;
+
+    load_obj('../models/airplane/airplane_.mtl', '../models/airplane/airplane_.obj', startPos, 0.3, { x: 0, y: Math.PI / 10, z: 0 }, (plane) => {
+        g_landing_animation = {
+            mesh: plane,
+            start: new THREE.Vector3(...startPos),
+            mid: new THREE.Vector3(...midPos),
+            end: new THREE.Vector3(...endPos),
+            startTime: performance.now(),
+            duration: duration,
+            waitingForTaxi: false,
+            phase: 'landing'
+        };
+    });
+}
+
 function addActionstoUI() {
-    const startButton = document.getElementById('start-button');
-    startButton.addEventListener('click', () => {
+    document.getElementById('start-button').addEventListener('click', () => {
         document.getElementById('introduction').style.display = 'none';
         document.getElementById('c').style.display = 'block';
     });
@@ -524,6 +759,119 @@ function addActionstoUI() {
         flights.style.display = flights.style.display === 'none' ? 'block' : 'none';
         const arrowIcon = document.getElementById('arrow-icon');
         arrowIcon.style.transform = arrowIcon.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+
+    document.getElementById("land-button").addEventListener('click', land_plane);
+
+    // Taxi Menu Logic
+    document.querySelectorAll('#taxi-options .flight-card').forEach(item => {
+        item.addEventListener('click', event => {
+            const target = event.target.getAttribute('data-target');
+            document.getElementById('taxi-menu').style.display = 'none';
+
+            if (!g_landing_animation) return;
+
+            let finalPos, finalRotationY;
+
+            // Define destination coordinates based on my_objs locations and terminal positions
+            switch (target) {
+                case 'terminal-1':
+                    finalPos = [-100, 0, -40]; // Left wing terminal area
+                    finalRotationY = Math.PI * 3 / 5;
+                    break;
+                case 'terminal-2':
+                    finalPos = [-80, 0, 0]; // Left wing terminal area
+                    finalRotationY = Math.PI * 3 / 5;
+                    break;
+                case 'terminal-3':
+                    finalPos = [-100, 0, 40]; // Left wing terminal area
+                    finalRotationY = Math.PI * 3 / 5;
+                    break;
+                case 'hangar':
+                    finalPos = [80, 0, 80]; // Inside hangar (assuming hangar 2)
+                    finalRotationY = Math.PI * 3 / 5;
+                    break;
+            }
+
+            g_landing_animation.phase = 'taxi';
+            g_landing_animation.waitingForTaxi = false;
+            g_landing_animation.taxiStartPos = g_landing_animation.mesh.position.clone();
+            g_landing_animation.taxiEndPos = new THREE.Vector3(...finalPos);
+
+            // Setup quaternion for initial and final rotation
+            g_landing_animation.taxiStartRot = g_landing_animation.mesh.quaternion.clone();
+
+            // Create target Euler then convert to Quaternion
+            const currentEuler = g_landing_animation.mesh.rotation.clone();
+            const targetEuler = new THREE.Euler(currentEuler.x, finalRotationY, currentEuler.z);
+            g_landing_animation.taxiEndRot = new THREE.Quaternion().setFromEuler(targetEuler);
+
+            g_landing_animation.taxiStartTime = performance.now();
+            g_landing_animation.taxiDuration = 4000; // 4 seconds for taxiing
+        });
+    });
+
+    // Takeoff UI Logic
+    document.getElementById("takeoff-button").addEventListener('click', () => {
+        if (g_landing_animation || g_takeoff_animation) return;
+
+        // Disable button styling
+        const landButton = document.getElementById('land-button');
+        landButton.disabled = true;
+        landButton.style.opacity = '0.5';
+        landButton.style.cursor = 'not-allowed';
+
+        const takeoffButton = document.getElementById('takeoff-button');
+        takeoffButton.disabled = true;
+        takeoffButton.style.opacity = '0.5';
+        takeoffButton.style.cursor = 'not-allowed';
+
+        document.getElementById('takeoff-origin-menu').style.display = 'block';
+    });
+
+    document.querySelectorAll('#takeoff-origin-options .flight-card').forEach(item => {
+        item.addEventListener('click', event => {
+            const origin = event.target.getAttribute('data-origin');
+            document.getElementById('takeoff-origin-menu').style.display = 'none';
+
+            let startPos, startRotationY = Math.PI / 10;
+
+            // Define origin coordinates 
+            switch (origin) {
+                case 'terminal-1':
+                    startPos = [-100, 0, -40];
+                    break;
+                case 'terminal-2':
+                    startPos = [-100, 0, 0];
+                    break;
+                case 'terminal-3':
+                    startPos = [-100, 0, 40];
+                    break;
+                case 'hangar':
+                    startPos = [80, 0, 80];
+                    break;
+            }
+
+            // Spawn plane for takeoff
+            load_obj('../models/airplane/airplane_.mtl', '../models/airplane/airplane_.obj', startPos, 0.3, { x: 0, y: startRotationY, z: 0 }, (plane) => {
+                const runwayStartPos = new THREE.Vector3(0, 0, -100);
+
+                // Create target Euler then convert to Quaternion for facing the runway
+                const currentEuler = plane.rotation.clone();
+                const targetEuler = new THREE.Euler(currentEuler.x, 0, currentEuler.z); // Facing generally towards Positive Z
+
+                g_takeoff_animation = {
+                    mesh: plane,
+                    phase: 'taxi_to_runway',
+                    startPos: plane.position.clone(),
+                    endPos: runwayStartPos,
+                    startRot: plane.quaternion.clone(),
+                    endRot: new THREE.Quaternion().setFromEuler(targetEuler),
+                    startTime: performance.now(),
+                    duration: 4000
+                };
+            });
+        });
     });
 }
 
@@ -542,6 +890,5 @@ function main() {
     my_objs();
     ui();
 }
-
 
 main();

@@ -339,7 +339,53 @@
                 </div>
             </li>
         </ul>
+        <div style="display: flex; gap: 8px; width: 100%;">
+            <button class="flight-card" id="land-button"
+                style="flex: 1; border: none; background: #3d3b41; color: #fce100; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; font-family: inherit;">
+                Land next flight
+            </button>
+            <button class="flight-card" id="takeoff-button"
+                style="flex: 1; border: none; background: #3d3b41; color: #fce100; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; font-family: inherit;">
+                Take off next flight
+            </button>
+        </div>
     </div>
+
+    <!-- Takeoff Origin Menu -->
+    <div id="takeoff-origin-menu"
+        style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(49, 47, 52, 0.95); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); z-index: 100; font-family: 'Outfit', sans-serif; border: 1px solid rgba(255, 255, 255, 0.1); width: 300px;">
+        <div class="flights-header" style="justify-content: center;">
+            <span style="color: #fce100">Where is the flight coming from?</span>
+        </div>
+        <ul id="takeoff-origin-options" style="list-style-type: none; padding: 0; margin: 0;">
+            <li class="flight-card" data-origin="terminal-1" style="text-align: center; font-weight: bold;">Terminal 1
+            </li>
+            <li class="flight-card" data-origin="terminal-2" style="text-align: center; font-weight: bold;">Terminal 2
+            </li>
+            <li class="flight-card" data-origin="terminal-3" style="text-align: center; font-weight: bold;">Terminal 3
+            </li>
+            <li class="flight-card" data-origin="hangar" style="text-align: center; font-weight: bold; color: #fce100;">
+                Hangar</li>
+        </ul>
+    </div>
+
+    <div id="taxi-menu"
+        style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(49, 47, 52, 0.95); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); z-index: 100; font-family: 'Outfit', sans-serif; border: 1px solid rgba(255, 255, 255, 0.1); width: 300px;">
+        <div class="flights-header" style="justify-content: center;">
+            <span>Are you ready to taxi?</span>
+        </div>
+        <ul id="taxi-options" style="list-style-type: none; padding: 0; margin: 0;">
+            <li class="flight-card" data-target="terminal-1" style="text-align: center; font-weight: bold;">Terminal 1
+            </li>
+            <li class="flight-card" data-target="terminal-2" style="text-align: center; font-weight: bold;">Terminal 2
+            </li>
+            <li class="flight-card" data-target="terminal-3" style="text-align: center; font-weight: bold;">Terminal 3
+            </li>
+            <li class="flight-card" data-target="hangar" style="text-align: center; font-weight: bold; color: #fce100;">
+                Go to Hangar</li>
+        </ul>
+    </div>
+
     <script type="module" src="main.js"></script>
 </body>
 
